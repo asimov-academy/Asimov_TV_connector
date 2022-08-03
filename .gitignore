@@ -1,3 +1,6 @@
+.project
+.pydevproject
+main_test.py
 .vscode
 dist
 build
