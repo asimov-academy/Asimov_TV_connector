@@ -13,11 +13,6 @@ import time
 # Added requests, which must be installed
 import requests
 import pandas as pd
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from websocket import create_connection
 import sys
 
@@ -224,9 +219,9 @@ class TvDatafeed:
     def get_hist(
         self,
         symbol: str,
-        exchange: str = "NSE",
+        exchange: str = "SIX",
         interval: Interval = Interval.in_daily,
-        n_bars: int = 10,
+        n_bars: int = 100,
         fut_contract: int = None,
         extended_session: bool = False,
     ) -> pd.DataFrame:
