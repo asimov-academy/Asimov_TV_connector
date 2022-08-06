@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="tvdatafeed",
-    version="1.2.1",
+    version="2.0.0",
     packages=["tvDatafeed"],
     url="https://github.com/StreamAlpha/tvdatafeed/",
     project_urls={
@@ -24,8 +24,7 @@ setup(
     install_requires=[
         "setuptools",
         "pandas",
-        "selenium",
         "websocket-client",
-        "chromedriver-autoinstaller",
+        "requests"
     ],
 )
