@@ -1,3 +1,4 @@
+# Removed all references to selenium
 import datetime
 import enum
 import json
@@ -9,6 +10,8 @@ import re
 import shutil
 import string
 import time
+# Added requests, which must be installed
+import requests
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -46,7 +49,6 @@ class TvDatafeed:
         contents = dict(
             token=token,
             date=self.token_date,
-            chromedriver_path=self.chromedriver_path,
         )
 
         with open(tokenfile, "wb") as f:
@@ -61,70 +63,14 @@ class TvDatafeed:
             with open(tokenfile, "rb") as f:
                 contents = pickle.load(f)
 
-            if contents["token"] not in [
-                "unauthorized_user_token",
-                None,
-            ]:
+            if contents["token"] not in ["unauthorized_user_token", None]:
                 token = contents["token"]
                 self.token_date = contents["date"]
                 logger.debug("auth loaded")
 
-            self.chromedriver_path = contents["chromedriver_path"]
-
         return token
 
-    def __assert_dir(self):
-        if not os.path.exists(self.path):
-            os.mkdir(self.path)
-            if self.chromedriver_path is None:
-                if (
-                    input(
-                        "\n\ndo you want to install chromedriver automatically?? y/n\t"
-                    ).lower()
-                    == "y"
-                ):
-                    self.__install_chromedriver()
-
-            else:
-                self.__save_token(token=None)
-                logger.info(
-                    "will use specified chromedriver path, no to specify this path again"
-                )
-
-        if not os.path.exists(self.profile_dir):
-            os.mkdir(self.profile_dir)
-            logger.debug("created chrome user dir")
-
-    def __install_chromedriver(self):
-
-        os.system("pip install chromedriver-autoinstaller")
-
-        import chromedriver_autoinstaller
-
-        path = chromedriver_autoinstaller.install(cwd=True)
-
-        if path is not None:
-            self.chromedriver_path = os.path.join(
-                self.path, "chromedriver" + (".exe" if ".exe" in path else "")
-            )
-            shutil.copy(path, self.chromedriver_path)
-            self.__save_token(token=None)
-
-            try:
-                time.sleep(1)
-                os.remove(path)
-            except:
-                logger.info(
-                    f"unable to remove file '{path}', you may want to remove it manually"
-                )
-
-        else:
-            logger.error(" unable to download chromedriver automatically.")
-
     def clear_cache(self):
-
-        import shutil
-
         shutil.rmtree(self.path)
         logger.info("cache cleared")
 
@@ -132,17 +78,10 @@ class TvDatafeed:
         self,
         username=None,
         password=None,
-        chromedriver_path=None,
-        auto_login=True,
     ) -> None:
 
         self.ws_debug = False
-        self.__automatic_login = auto_login
-        self.chromedriver_path = chromedriver_path
-        self.profile_dir = os.path.join(self.path, "chrome")
         self.token_date = datetime.date.today() - datetime.timedelta(days=1)
-        self.__assert_dir()
-
         token = None
         token = self.auth(username, password)
 
@@ -157,48 +96,6 @@ class TvDatafeed:
         self.session = self.__generate_session()
         self.chart_session = self.__generate_chart_session()
 
-    def __login(self, username, password):
-
-        driver = self.__webdriver_init()
-
-        if not self.__automatic_login:
-            input()
-
-        else:
-            try:
-                logger.debug("click sign in")
-
-                driver.find_element(By.CLASS_NAME, "tv-header__user-menu-button").click()
-                time.sleep(1)
-
-
-                driver.find_element(By.CSS_SELECTOR , 'button[data-name="header-user-menu-sign-in"]').click()
-                
-                time.sleep(3)
-                logger.debug("click email")
-                embutton = driver.find_element(By.CLASS_NAME,
-                    "tv-signin-dialog__toggle-email"
-                )
-                embutton.click()
-                time.sleep(5)
-
-                logger.debug("entering credentials")
-                username_input = driver.find_element(By.NAME, "username")
-                username_input.send_keys(username)
-                password_input = driver.find_element(By.NAME, "password")
-                password_input.send_keys(password)
-
-                logger.debug("click login")
-                submit_button = driver.find_element(By.CLASS_NAME, "tv-button__loader")
-                submit_button.click()
-                time.sleep(5)
-            except Exception as e:
-                logger.error(f"{e}, {e.args}")
-                logger.error(
-                    "automatic login failed\n Reinitialize tvdatafeed with auto_login=False "
-                )
-
-        return driver
 
     def auth(self, username, password):
         token = self.__load_token()
@@ -206,113 +103,30 @@ class TvDatafeed:
         if (
             token is None
             and (username is None or password is None)
-            and self.__automatic_login
         ):
             pass
 
         elif self.token_date == datetime.date.today():
             pass
 
-        elif token is not None and (username is None or password is None):
-            driver = self.__webdriver_init()
-            if driver is not None:
-                token = self.__get_token(driver)
-                self.token_date = datetime.date.today()
-                self.__save_token(token)
-
         else:
-            driver = self.__login(username, password)
-            if driver is not None:
-                token = self.__get_token(driver)
+            token = self.__get_token(username,password)
                 self.token_date = datetime.date.today()
                 self.__save_token(token)
 
         return token
 
-    def __webdriver_init(self):
-        caps = DesiredCapabilities.CHROME
-
-        caps["goog:loggingPrefs"] = {"performance": "ALL"}
-
-        logger.info("refreshing tradingview token using selenium")
-        logger.debug("launching chrome")
-        options = Options()
-
-        if self.__automatic_login:
-            options.add_argument("--headless")
-            logger.debug("chromedriver in headless mode")
-
-        # options.add_argument("--start-maximized")
-        options.add_argument("--disable-gpu")
-
-        # special workaround for linux
-        if sys.platform == "linux":
-            options.add_argument(
-                f'--user-data-dir={os.path.expanduser("~")}/snap/chromium/common/chromium/Default'
-            )
-        # special workaround for macos. Credits "Ambooj"
-        elif sys.platform == "darwin":
-            options.add_argument(
-                f'--user-data-dir={os.path.expanduser("~")}/Library/Application Support/Google/Chrome'
-            )
-        else:
-            options.add_argument(f"user-data-dir={self.profile_dir}")
-        driver = None
-        try:
-            if not self.__automatic_login:
-                print(
-                    "\n\n\nYou need to login manually\n\n Press 'enter' to open the browser "
-                )
-                input()
-                print(
-                    "opening browser. Press enter once lgged in return back and press 'enter'. \n\nDO NOT CLOSE THE BROWSER"
-                )
-                time.sleep(5)
-            service = Service(verbose = False, executable_path=self.chromedriver_path)
-
-            driver = webdriver.Chrome(
-                service = service, desired_capabilities=caps, options=options
-            )
-
-            logger.debug("opening https://in.tradingview.com ")
-            driver.set_window_size(1920, 1080)
-            driver.get("https://in.tradingview.com")
-            time.sleep(5)
-
-            return driver
-
-        except Exception as e:
-            if driver is not None:
-                driver.quit()
-            logger.error(e)
 
     @staticmethod
-    def __get_token(driver: webdriver.Chrome):
-        driver.get("https://www.tradingview.com/chart/")
-
-        def process_browser_logs_for_network_events(logs):
-            for entry in logs:
-                log = json.loads(entry["message"])["message"]
-
-                if "Network.webSocketFrameSent" in log["method"]:
-                    if (
-                        "set_auth_token" in log["params"]["response"]["payloadData"]
-                        and "unauthorized_user_token"
-                        not in log["params"]["response"]["payloadData"]
-                    ):
-                        yield log
-
-        logs = driver.get_log("performance")
-        events = process_browser_logs_for_network_events(logs)
-        token = None
-        for event in events:
-            x = event
-            token = json.loads(x["params"]["response"]["payloadData"].split("~")[-1])[
-                "p"
-            ][0]
-
-        driver.quit()
-
+    # Reviewed to use requests instead of Selenium
+    def __get_token(username, password):
+        sign_in_url = 'https://www.tradingview.com/accounts/signin/'
+        data = {"username": username, "password": password, "remember": "on"}
+        headers = {
+            'Referer': 'https://www.tradingview.com'
+        }
+        response = requests.post(url=sign_in_url, data=data, headers=headers)
+        token = response.json()['user']['auth_token']    
         return token
 
     def __create_connection(self):
@@ -483,6 +297,7 @@ class TvDatafeed:
                 '={"symbol":"'
                 + symbol
                 + '","adjustment":"splits","session":'
+
                 + ('"regular"' if not extended_session else '"extended"')
                 + "}",
             ],
