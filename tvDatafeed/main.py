@@ -2,17 +2,13 @@ import datetime
 import enum
 import json
 import logging
-import os
-import pickle
 import random
 import re
-import shutil
 import string
-import time
 import pandas as pd
 from websocket import create_connection
 import requests
-import sys
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +30,11 @@ class Interval(enum.Enum):
 
 
 class TvDatafeed:
-    sign_in_url = 'https://www.tradingview.com/accounts/signin/'
-    ws_headers = json.dumps({"Origin": "https://data.tradingview.com"})
-    signin_headers = {'Referer': 'https://www.tradingview.com'}
-    ws_timeout = 5
+    __sign_in_url = 'https://www.tradingview.com/accounts/signin/'
+    __search_url = 'https://symbol-search.tradingview.com/symbol_search/?text={}&hl=1&exchange={}&lang=en&type=&domain=production'
+    __ws_headers = json.dumps({"Origin": "https://data.tradingview.com"})
+    __signin_headers = {'Referer': 'https://www.tradingview.com'}
+    __ws_timeout = 5
 
     def __init__(
         self,
@@ -76,7 +73,7 @@ class TvDatafeed:
                     "remember": "on"}
             try:
                 response = requests.post(
-                    url=self.sign_in_url, data=data, headers=self.signin_headers)
+                    url=self.__sign_in_url, data=data, headers=self.__signin_headers)
                 token = response.json()['user']['auth_token']
             except Exception as e:
                 logger.error('error while signin')
@@ -87,7 +84,7 @@ class TvDatafeed:
     def __create_connection(self):
         logging.debug("creating websocket connection")
         self.ws = create_connection(
-            "wss://data.tradingview.com/socket.io/websocket", headers=self.ws_headers, timeout=self.ws_timeout
+            "wss://data.tradingview.com/socket.io/websocket", headers=self.__ws_headers, timeout=self.__ws_timeout
         )
 
     @staticmethod
@@ -292,11 +289,24 @@ class TvDatafeed:
 
         return self.__create_df(raw_data, symbol)
 
+    def search_symbol(self, text: str, exchange: str = ''):
+        url = self.__search_url.format(text, exchange)
+
+        symbols_list = []
+        try:
+            resp = requests.get(url)
+
+            symbols_list = json.loads(resp.text.replace(
+                '</em>', '').replace('<em>', ''))
+        except Exception as e:
+            logger.error(e)
+
+        return symbols_list
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    tv = TvDatafeed(
-    )
+    tv = TvDatafeed()
     print(tv.get_hist("CRUDEOIL", "MCX", fut_contract=1))
     print(tv.get_hist("NIFTY", "NSE", fut_contract=1))
     print(

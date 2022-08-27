@@ -88,6 +88,18 @@ extended_price_data = tv.get_hist(symbol="EICHERMOT",exchange="NSE",interval=Int
 
 ---
 
+## Search Symbol
+
+To find the exact symbols for an instrument you can use `tv.search_symbol` method.
+
+You need to provide search text and optional exchange. This will return a list of macthing instruments and their symbol.
+
+```python
+tv.search_symbol('CRUDE','MCX')
+```
+
+---
+
 ## Calculating Indicators
 
 Indicators data is not downloaded from tradingview. For that you can use [TA-Lib](https://github.com/mrjbq7/ta-lib). Check out this video for installation and usage instructions-
@@ -140,8 +152,8 @@ Before creating an issue in this library, please follow the following steps.
 6. Have some print() function calls to display the values of some variables related to your problem.
 7. Post the results of print() functions also in the issue.
 8. Use the insert code feature of github to inset code and print outputs, so that the code is displyed neat. !
-9. If you have multiple lines of code, use tripple grave accent ( ``` ) to insert multiple lines of code. 
-    
-    [Example:](https://docs.github.com/en/github/writing-on-github/creating-and-highlighting-code-blocks)
+9. If you have multiple lines of code, use tripple grave accent ( ``` ) to insert multiple lines of code.
 
-    ![1659809630082](image/README/1659809630082.png)
+   [Example:](https://docs.github.com/en/github/writing-on-github/creating-and-highlighting-code-blocks)
+
+   ![1659809630082](image/README/1659809630082.png)
