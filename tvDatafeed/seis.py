@@ -2,40 +2,37 @@ import tvDatafeed
 
 class Seis(object): # TODO: add a __repr__ method so user can easily see what Seis contains
     """
-    Contain Seis related data
+    Symbol, exchange and interval data set
     
-    Holds a set of symbol, exchange and interval values in addition to
-    keeping a set of consumer thread input buffers (CTIB) each of which 
-    provides an input to a consumer (callback) thread that is waiting 
-    for new bar data for this symbol-exchange-interval set (Seis). The
-    CTIB is actually a Queue object acting as a FIFO to consumer threads
-    for receiving new bar data. There is an attribute 'updated' which 
-    holds datetime value. This is meant to hold the date and time of when
-    was the latest bar released for this Seis.
+    Holds a unique set of symbol, exchange and interval 
+    values in addition to keeping a set of consumers 
+    instances for this set.
+    
+    Parameters
+    ----------
+    symbol : str 
+        ticker string for symbol
+    exchange : str
+        exchange where symbol is listed
+    interval : tvDatafeed.Interval
+        chart interval
     
     Methods
     -------
-    add_ctib(buffer)
-        Add consumer thread input buffer
-    del_ctib(ctib_id)
-        Remove consumer thread input buffer
-    get_ctib(ctib_id)
-        Get consumer thread input buffer
-    get_ctibs()
-        Retrieve all consumer thread input buffers for this Seis
+    new_consumer(callback)
+        Create a new consumer and add to Seis
+    del_consumer(consumer)
+        Remove consumer from Seis
+    get_hist(n_bars)
+        Get historic data for this Seis
+    del_seis()
+        Remove Seis from tvDatafeedLive where it is
+        listed
+    get_consumers()
+        Return a list of consumers for this Seis
     """
 
     def __init__(self, symbol, exchange, interval):
-        """
-        Parameters
-        ----------
-        symbol : str
-            asset or ticker name on the exchange
-        exchange : str
-            exchange name on TradingView listing the symbol
-        interval : tvDatafeed.Interval
-            symbol updating interval option in TradingView
-        """
         self._symbol=symbol
         self._exchange=exchange
         self._interval=interval
@@ -49,16 +46,6 @@ class Seis(object): # TODO: add a __repr__ method so user can easily see what Se
         #
         # Instances are equal if symbol, exchange and interval attributes
         # are of same value.
-        #
-        # Parameters
-        # ----------
-        # other : seis.Seis
-        #    the other instance to compare against
-        #
-        # Returns
-        # -------
-        # boolean 
-        #     True if equal, False otherwise
         if isinstance(other, self.__class__): # make sure that they are the same class 
             if self.symbol == other.symbol and self.exchange == other.exchange and self.interval == other.interval: # these attributes need to be identical
                 return True
@@ -101,15 +88,23 @@ class Seis(object): # TODO: add a __repr__ method so user can easily see what Se
     def tvdatafeed(self):
         self._tvdatafeed=None
     
-    def add_seis(self):
-        '''
-        Add this Seis into MAR list of specified TvDatafeed
-        '''
-        self._tvdatafeed.add_seis(self)
-    
     def new_consumer(self, callback):
         '''
-        Create a new consumer and add to TvDatafeed
+        Create a new consumer and add to Seis
+        
+        Parameters
+        ----------
+        callback : func
+            function to call when new data produced
+        
+        Returns
+        -------
+        tvdatafeed.Consumer
+        
+        Raises
+        ------
+        NameError
+            if no TvDatafeedLive reference is added for this Seis
         '''
         if self._tvdatafeed is None:
             raise NameError("TvDatafeed not provided")
@@ -118,7 +113,17 @@ class Seis(object): # TODO: add a __repr__ method so user can easily see what Se
     
     def del_consumer(self, consumer):
         '''
-        Remove the consumer from TvDatafeed
+        Remove consumer from Seis
+        
+        Parameters
+        ----------
+        consumer : tvdatafeed.Consumer
+            consumer instance
+        
+        Raises
+        ------
+        NameError
+            if no TvDatafeedLive reference is added for this Seis
         '''
         if self._tvdatafeed is None:
             raise NameError("TvDatafeed not provided")
@@ -126,33 +131,50 @@ class Seis(object): # TODO: add a __repr__ method so user can easily see what Se
         self._tvdatafeed.del_consumer(consumer) 
     
     def add_consumer(self, consumer):
-        '''
-        Add consumer to this Seis consumers list, method used only by tvdatafeed
-        '''
+        # Add consumer into Seis, not for direct use
+        #
+        # This methods is not for direct calling by the
+        # user, but for TvDatafeedLive instance to 
+        # perform operations in the background.
+        #
+        # Parameters
+        # ----------
+        # consumer : tvdatafeed.Consumer
+        #     consumer instance
         self._consumers.append(consumer)
         
     def pop_consumer(self, consumer):
-        '''
-        Remove the consumer from this Seis consumer list, method used only by tvdatafeed
-        '''
+        # Remove consumer from Seis, not for direct use
+        #
+        # This methods is not for direct calling by the
+        # user, but for TvDatafeedLive instance to 
+        # perform operations in the background.
+        #
+        # Parameters
+        # ----------
+        # consumer : tvdatafeed.Consumer
+        #    consumer instance
         if consumer not in self._consumers:
             raise NameError("Consumer does not exist in the list")
         self._consumers.remove(consumer)
         
-    def get_hist(self, n_bars):
+    def get_hist(self, n_bars): # TODO: implement this method
         '''
-        One-time retrieval of bar data for this Seis
+        Get historic data for this Seis
+        
+        This method is not implemented!
+        
+        Parameters
+        ----------
+        n_bars : int
+            number of historic bars to retrieve
         '''
         raise NotImplementedError 
     
-        if self._tvdatafeed is None:
-            raise NameError("TvDatafeed not provided")
-        
-        return self._tvdatafeed.get_hist(self, n_bars) # TODO: make get_hist method such that it can accept old argument set (from original TvDatafeed) and Seis
-    
     def del_seis(self):
         '''
-        Remove the Seis from TvDatafeed
+        Remove Seis from tvDatafeedLive where it is
+        listed
         '''
         if self._tvdatafeed is None:
             raise NameError("TvDatafeed not provided")
@@ -161,7 +183,13 @@ class Seis(object): # TODO: add a __repr__ method so user can easily see what Se
     
     def get_consumers(self):
         '''
-        Retrieve a list of consumers added to this Seis 
+        Return a list of consumers for this Seis
+        
+        Returns
+        -------
+        list
+            contains all consumer instances registered 
+            for this Seis
         '''
         return self._consumers
     
