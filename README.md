@@ -108,6 +108,67 @@ Indicators data is not downloaded from tradingview. For that you can use [TA-Lib
 
 ---
 
+## Live feed (TvDatafeedLive)
+
+### Description
+
+TvDatafeedLive is a sub-class of TvDatafeed to extend the functionality and provide live data feed feature. The live data feed feature means that the user can specify
+symbol, exchange and interval set (also called as seis) for which they want the new data bar to be retrieved from TradingView whenever it is produced. The user can then
+provide any number of callback functions for that seis which will be called with the newly retrieved data bar. Callback functions and retrieving data from TradingView is
+implemented in threads so live data is as close to realtime as possible, but it **does not provide realtime** data samples!
+
+### Usage
+
+Import the packages and initialize with your tradingview username and password. As TvDatafeedLive is an extension of TvDatafeed class then all the rules about initialization
+are the same.
+
+PICTURE HERE ABOUT INIT!
+
+### Creating new Seis
+
+TvDatafeedLive works with **Seis** and **Consumer** objects. Seis is short for symbol exchange interval set. It is a class to contain a unique combination of symbol, exchange
+and interval values together with methods to make managing and using various symbols easier for the user.
+
+User can create a new Seis by calling `tvl.new_seis` method.
+
+PICTURE HERE ABOUT CREATING NEW SEIS
+
+The interface for this method is similar to the `get_hist` method as it accepts the same three arguments - symbol, exchange and interval. Once the `seis` is created
+it will automatically be added into live feed of `tvl`. This means that a thread will be created which will continously wait until new data bar is 
+produced for this symbol in TradingView and will retrieve it. If no consumer instances are added to `seis` then nothing will be done with the retrieved data 
+sample and it will be discarded.
+
+The user can use the returned `seis` instance to reference this symbol, exchange and interval set in the `tvl`. For example, they can easily see 
+what parameters it has been initialized with:
+
+PICTURE HERE ABOUT CALLING SEIS OBJECT
+
+### Removing Seis
+
+The user can remove the `seis` from `tvl` using the `seis.del_seis` or `tvl.del_seis(seis)` method. In the latter case the method must have the 
+`seis` to be deleted provided as an argument to reference a specific seis instance.
+
+PICTURE HERE ABOUT REMOVING SEIS
+
+### Creating new Consumer
+
+The user can consume/use retrieved data by registering callback functions to `seis`. The `tvl.new_consumer` method accepts a function as an argument
+and returns a consumer object. The function provided must follow the prototype function shown below:
+
+PICTURE HERE ABOUT CREATING NEW CONSUMER
+
+When there is new data produced and retrieved from TradingView for this symbol (Seis) then the provided function will
+be called with pandas DataFrame and `seis` as arguments. The user can add one or many callback functions to `Seis` - each of them will create a new
+`consumer`.
+
+### Removing Consumer
+
+The user can remove a `consumer` from `seis` by using the `tvl.del_consumer(seis, consumer)`, `seis.del_consumer(consumer)` or `consumer.del_consumer()` methods.
+
+PICTURE HERE ABOUT REMOVING CONSUMER
+
+---
+
 ## Supported Time Intervals
 
 Following timeframes intervals are supported-
