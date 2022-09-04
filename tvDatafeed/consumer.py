@@ -1,7 +1,34 @@
 import threading, queue
 
 class Consumer(threading.Thread):
+    '''
+    Seis data consumer and processor
     
+    This object contains reference to Seis and callback function
+    which will be called when new data bar becomes available for
+    that Seis. Data reception and calling callback function is 
+    done in a separate thread which the user must start by calling
+    start() method.
+    
+    Parameters
+    ----------
+    seis : Seis
+        Consumer receives data bar from this Seis
+    callback : func
+        reference to a function to be called when new data available,
+        function protoype must be func_name(seis, data)
+    
+    Methods
+    -------
+    put(data)
+        Put new data into buffer to be processed
+    del_consumer()
+        Shutdown the callback thread and remove from Seis
+    start()
+        start data processing and callback thread
+    stop()
+        Stop the data processing and callback thread
+    '''
     def __init__(self, seis, callback):
         super().__init__()
 
@@ -16,9 +43,7 @@ class Consumer(threading.Thread):
         return f'{repr(self.seis)},callback={self.callback.__name__}'
     
     def run(self):
-        '''
-        Callback thread
-        '''
+        # callback thread tasks
         while True:
             data=self._buffer.get()
             if data is None:
@@ -33,18 +58,23 @@ class Consumer(threading.Thread):
     def put(self, data):
         '''
         Put new data into buffer to be processed
+        
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            contains single bar data retrieved from TradingView
         '''
         self._buffer.put(data)
     
     def del_consumer(self):
         '''
-        Shutdown the callback thread and remove from Seis
+        Stop the callback thread and remove from Seis
         '''
         self.seis.del_consumer(self)
     
     def stop(self):
         '''
-        Shutdown the callback thread and remove from Seis
+        Stop the data processing and callback thread
         '''
         self._buffer.put(None)
         
