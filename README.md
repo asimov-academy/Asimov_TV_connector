@@ -3,7 +3,7 @@
 A simple TradingView historical Data Downloader. Tvdatafeed allows downloading upto 5000 bars on any of the supported timeframe.
 
 If you found the content useful and want to support my work, you can buy me a coffee!
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/StreamAlpha)
+[![](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/StreamAlpha)
 
 ## Installation
 
@@ -31,9 +31,13 @@ Full tutorial
 
 ---
 
+## About release 2.0.0
+
+Version 2.0.0 is a major release and is not backward compatible. make sure you update your code accordingly. Thanks to [stefanomorni](https://github.com/stefanomorni) for contributing and removing selenium dependancy.
+
 ## Usage
 
-Import the packages and initialize with your tradingview username and password. If running for first time it will prompt chromedriver download, type 'y' and press enter.
+Import the packages and initialize with your tradingview username and password.
 
 ```python
 from tvDatafeed import TvDatafeed, Interval
@@ -41,20 +45,12 @@ from tvDatafeed import TvDatafeed, Interval
 username = 'YourTradingViewUsername'
 password = 'YourTradingViewPassword'
 
-
-
-tv = TvDatafeed(username, password, chromedriver_path=None)
+tv = TvDatafeed(username, password)
 ```
 
-If auto login fails, you can try logging in manually by specifying `auto_login=False`
+You may use without logging in, but in some cases tradingview may limit the symbols and some symbols might not be available.
 
-```python
-tv = TvDatafeed(auto_login=False)
-```
-
-It will open TradingView website, you need to login manually. Once logged in return back to terminal and press 'enter', browser will automatically close. Whichever login method is used, login is required only once. **For detailed login precedure watch the videos shown above.**
-
-You may use without logging in, but in some cases tradingview may limit the symbols and some symbols might not be available. To use it without logging in
+To use it without logging in
 
 ```python
 tv = TvDatafeed()
@@ -88,6 +84,18 @@ crudeoil_data = tv.get_hist(symbol='CRUDEOIL',exchange='MCX',interval=Interval.i
 
 # downloading data for extended market hours
 extended_price_data = tv.get_hist(symbol="EICHERMOT",exchange="NSE",interval=Interval.in_1_hour,n_bars=500, extended_session=False)
+```
+
+---
+
+## Search Symbol
+
+To find the exact symbols for an instrument you can use `tv.search_symbol` method.
+
+You need to provide search text and optional exchange. This will return a list of macthing instruments and their symbol.
+
+```python
+tv.search_symbol('CRUDE','MCX')
 ```
 
 ---
@@ -131,36 +139,6 @@ Following timeframes intervals are supported-
 `Interval.in_monthly`
 
 ---
-## Cloud Usage
-You might face some problem while using TvDatafeed in cloud because of selenium. For that make sure to create the app dir before initializing TvDatafeed
-
-```python
-import os
-from tvDatafeed import TvDatafeed,Interval
-app_dir = os.mkdir(os.path.join(os.path.expanduser("~"), ".tv_datafeed/"))
-if not os.path.exists(app_dir):
-    os.mkdir(app_dir)
-
-tv = TvDatafeed()
-
-# your code goes here
-```
-
-This will only work without username and password. You will be able to download most of the data without logging in
-
----
-
-## Troubleshooting
-
-If you face any difficulty, you can reset this tvdatafeed using `clear_cache` method. You will need to login again after reset.
-
-```python
-tv.clear_cache()
-```
-
-if still issue persists checj out [#26 (comment)](https://github.com/StreamAlpha/tvdatafeed/issues/26#issuecomment-912619033), works on all platforms.
-
----
 
 ## Read this before creating an issue
 
@@ -174,4 +152,8 @@ Before creating an issue in this library, please follow the following steps.
 6. Have some print() function calls to display the values of some variables related to your problem.
 7. Post the results of print() functions also in the issue.
 8. Use the insert code feature of github to inset code and print outputs, so that the code is displyed neat. !
-9. If you have multiple lines of code, use tripple grave accent ( ``` ) to insert multiple lines of code. [Example:](https://docs.github.com/en/github/writing-on-github/creating-and-highlighting-code-blocks) ![image](https://user-images.githubusercontent.com/59556194/128167963-90edc379-6a15-4363-911f-5bfe1e92ef56.png)
+9. If you have multiple lines of code, use tripple grave accent ( ``` ) to insert multiple lines of code.
+
+   [Example:](https://docs.github.com/en/github/writing-on-github/creating-and-highlighting-code-blocks)
+
+   ![1659809630082](image/README/1659809630082.png)
