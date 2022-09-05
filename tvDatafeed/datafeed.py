@@ -161,8 +161,8 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
             
             return False
     
-    def __init__(self, username=None, password=None, chromedriver_path=None, auto_login=True):
-        super().__init__(username, password, chromedriver_path, auto_login)
+    def __init__(self, username=None, password=None):
+        super().__init__(username, password)
         
         self._lock=threading.Lock()
         self._main_thread = None  
