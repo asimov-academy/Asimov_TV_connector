@@ -141,6 +141,7 @@ User can create a new Seis by calling `tvl.new_seis` method.
 ```python
 
 seis = tvl.new_seis('ETHUSDT', 'BINANCE', Interval.in_1_hour)
+seis2 = tvl.new_seis('ETHUSDT', 'BINANCE', Interval.in_2_hour)
 
 ```
 
@@ -155,24 +156,26 @@ can specify maximum amount to wait before aborting the call and returning. This 
 ```python
 
 seis = tvl.new_seis('ETHUSDT', 'BINANCE', Interval.in_1_hour, timeout=10)
+seis2 = tvl.new_seis('ETHUSDT', 'BINANCE', Interval.in_2_hour, timeout=10)
 
 ```
 
 ### Removing seis
 
-The user can remove the `seis` from `tvl` using the `seis.del_seis` or `tvl.del_seis(seis)` method. In the latter case the method must have the 
+The user can remove the `seis` from `tvl` using the `tvl.del_seis(seis)` or `seis.del_seis` method. In the latter case the method must have the 
 `seis` to be deleted provided as an argument to reference a specific seis instance.
 
 ```python
 
 tvl.del_seis(seis)
+seis2.del_seis()
 
 ```
 
 ### Creating new consumer
 
 The user can consume/use retrieved data by registering callback functions to `seis`. The `tvl.new_consumer` method accepts `seis` and a function as an argument
-and returns a consumer object. The `seis.new_consumer` simply needs the function as an argument. The function provided must follow the prototype function shown below:
+and returns a consumer object. The `seis.new_consumer` method simply needs the function as an argument. The function provided must follow the prototype function shown below:
 
 ```python
 
