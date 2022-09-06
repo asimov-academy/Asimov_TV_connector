@@ -193,6 +193,3 @@ class Seis(object): # TODO: add a __repr__ method so user can easily see what Se
         '''
         return self._consumers
     
-    def __del__(self):
-        raise NotImplementedError()
-    
