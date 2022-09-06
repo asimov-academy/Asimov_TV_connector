@@ -200,11 +200,11 @@ be called with pandas DataFrame and `seis` as arguments. The user can add one or
 
 ### Removing consumer
 
-The user can remove a `consumer` from `seis` by using the `tvl.del_consumer(seis, consumer)`, `seis.del_consumer(consumer)` or `consumer.del_consumer()` methods.
+The user can remove a `consumer` from `seis` by using the `tvl.del_consumer`, `seis.del_consumer` or `consumer.del_consumer()` methods.
 
 ```python
 
-tvl.del_consumer(seis, consumer1)
+tvl.del_consumer(consumer1)
 seis.del_consumer(consumer2)
 consumer3.del_consumer()
 
