@@ -1,6 +1,6 @@
 import tvDatafeed
 
-class Seis(object): # TODO: add a __repr__ method so user can easily see what Seis contains
+class Seis(object):
     """
     Symbol, exchange and interval data set
     
