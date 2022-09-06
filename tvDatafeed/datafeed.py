@@ -216,8 +216,8 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
         interval_key=new_seis.interval.value
         if interval_key not in self._sat.intervals():
             # get last bar update datetime value for the Seis
-            ticker_data=super().get_hist(new_seis.symbol, new_seis.exchange, new_seis.interval, n_bars=1) # get single ticker data bar for this symbol from TradingView
-            update_dt=ticker_data.index.to_pydatetime()[0] # extract datetime of when this bar was produced/released
+            ticker_data=super().get_hist(new_seis.symbol, new_seis.exchange, new_seis.interval, n_bars=2) # get ticker data bar for this symbol from TradingView
+            update_dt=ticker_data.index.to_pydatetime()[1] # extract datetime of when this bar was produced/released
             # append this seis into SAT
             self._sat.append(new_seis, update_dt)
         else:
@@ -345,11 +345,10 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
                     for _ in range(0, RETRY_LIMIT): # re-try maximum of RETRY_LIMIT times
                         data=super().get_hist(seis.symbol, seis.exchange, interval=seis.interval, n_bars=2) # get_hist returns bars starting with currently open so need to read 2 to get first closed
                         if data is not None:
-                            data=data.drop(labels=data.index[0], axis=0) # drop the row which has un-closed bar data
-                            
                             # retrieved data datetime not equal the old datetime means new sample
                             if seis.updated != data.index.to_pydatetime()[0]: # TODO: create a method in Seis class called is_new_data(data) in which we do datetime checking
                                 seis.updated=data.index.to_pydatetime()[0] # update the datetime of the last sample
+                                data=data.drop(labels=data.index[1]) # drop the row which has un-closed bar data
                                 break
                         
                         time.sleep(0.1) # little time before retrying
