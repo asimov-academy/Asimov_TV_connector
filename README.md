@@ -7,16 +7,10 @@ If you found the content useful and want to support my work, you can buy me a co
 
 ## Installation
 
-This module is installed via pip:
+This module can be installed from github repo
 
 ```sh
-pip install tvdatafeed
-```
-
-or installing from github repo
-
-```sh
-pip install --upgrade --no-cache-dir git+https://github.com/StreamAlpha/tvdatafeed.git
+pip install --upgrade --no-cache-dir git+https://github.com/rongardF/tvdatafeed.git
 ```
 
 For usage instructions, watch these videos-
@@ -207,6 +201,18 @@ The user can remove a `consumer` from `seis` by using the `tvl.del_consumer`, `s
 tvl.del_consumer(consumer1)
 seis.del_consumer(consumer2)
 consumer3.del_consumer()
+
+```
+
+### Getting Data
+
+TvDatafeedLive supports retrieving historic data in adjecent to retrieving live data. The user can use the `tvl.get_hist` method which has the same 
+API as the TvDatafeed `get_hist` method, except it accepts one additional optional argument - timeout. This parameter defaults to -1 which means no
+timeout.
+
+```python
+
+data=tvl.get_hist(symbol, exchange, interval=tvDatafeed.Interval.in_daily, n_bars=10, fut_contract=None, extended_session=False, timeout=-1)
 
 ```
 

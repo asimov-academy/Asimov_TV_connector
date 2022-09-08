@@ -88,7 +88,7 @@ class Seis(object):
     def tvdatafeed(self):
         self._tvdatafeed=None
     
-    def new_consumer(self, callback):
+    def new_consumer(self, callback, timeout=-1):
         '''
         Create a new consumer and add to Seis
         
@@ -96,10 +96,15 @@ class Seis(object):
         ----------
         callback : func
             function to call when new data produced
+        timeout : int, optional
+            maximum time to wait in seconds for return, default
+            is -1 (blocking)
         
         Returns
         -------
         tvdatafeed.Consumer
+            If timeout was specified and expired then False will be 
+            returned instead of Consumer
         
         Raises
         ------
@@ -109,9 +114,9 @@ class Seis(object):
         if self._tvdatafeed is None:
             raise NameError("TvDatafeed not provided")
         
-        return self._tvdatafeed.new_consumer(self, callback) # methods go through tvdatafeed to acquire lock and make it thread safe
+        return self._tvdatafeed.new_consumer(self, callback, timeout) # methods go through tvdatafeed to acquire lock and make it thread safe
     
-    def del_consumer(self, consumer):
+    def del_consumer(self, consumer, timeout=-1):
         '''
         Remove consumer from Seis
         
@@ -119,6 +124,14 @@ class Seis(object):
         ----------
         consumer : tvdatafeed.Consumer
             consumer instance
+        timeout : int, optional
+            maximum time to wait in seconds for return, default
+            is -1 (blocking)
+        
+        Returns
+        -------
+        boolean
+            True if successful, False if timed out.
         
         Raises
         ------
@@ -128,7 +141,7 @@ class Seis(object):
         if self._tvdatafeed is None:
             raise NameError("TvDatafeed not provided")
         
-        self._tvdatafeed.del_consumer(consumer) 
+        return self._tvdatafeed.del_consumer(consumer, timeout) 
     
     def add_consumer(self, consumer):
         # Add consumer into Seis, not for direct use
@@ -171,15 +184,26 @@ class Seis(object):
         '''
         raise NotImplementedError 
     
-    def del_seis(self):
+    def del_seis(self, timeout=-1):
         '''
         Remove Seis from tvDatafeedLive where it is
         listed
+        
+        Parameters
+        ----------
+        timeout : int, optional
+            maximum time to wait in seconds for return, default
+            is -1 (blocking)
+            
+        Returns
+        -------
+        boolean
+            True if successful, False if timed out.
         '''
         if self._tvdatafeed is None:
             raise NameError("TvDatafeed not provided")
         
-        self._tvdatafeed.del_seis(self)
+        return self._tvdatafeed.del_seis(self, timeout)
     
     def get_consumers(self):
         '''

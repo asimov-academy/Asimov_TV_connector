@@ -66,11 +66,22 @@ class Consumer(threading.Thread):
         '''
         self._buffer.put(data)
     
-    def del_consumer(self):
+    def del_consumer(self, timeout=-1):
         '''
         Stop the callback thread and remove from Seis
+        
+        Parameters
+        ----------
+        timeout : int, optional
+            maximum time to wait in seconds for return, default
+            is -1 (blocking)
+        
+        Returns
+        -------
+        boolean
+            True if successful, False if timed out.
         '''
-        self.seis.del_consumer(self)
+        return self.seis.del_consumer(self, timeout)
     
     def stop(self):
         '''
