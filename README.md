@@ -162,7 +162,7 @@ seis2 = tvl.new_seis('ETHUSDT', 'BINANCE', Interval.in_2_hour, timeout=10)
 
 ### Removing seis
 
-The user can remove the `seis` from `tvl` using the `tvl.del_seis(seis)` or `seis.del_seis` method. In the latter case the method must have the 
+The user can remove the `seis` from `tvl` using the `tvl.del_seis(seis)` or `seis.del_seis` method. In the former case the method must have the 
 `seis` to be deleted provided as an argument to reference a specific seis instance.
 
 ```python
@@ -195,12 +195,12 @@ consumer3=seis.new_consumer(consumer_func3)
 ```
 
 When there is new data produced and retrieved from TradingView for this seis then the provided function will
-be called with pandas DataFrame and `seis` as arguments. The user can add one or many callback functions to `seis` - each of them will create a new
+be called with `seis` and pandas DataFrame as arguments. The user can add one or many callback functions to `seis` - each of them will create a new
 `consumer`.
 
 ### Removing consumer
 
-The user can remove a `consumer` from `seis` by using the `tvl.del_consumer`, `seis.del_consumer` or `consumer.del_consumer()` methods.
+The user can remove a `consumer` from `seis` by using the `tvl.del_consumer`, `seis.del_consumer` or `consumer.del_consumer` methods.
 
 ```python
 
