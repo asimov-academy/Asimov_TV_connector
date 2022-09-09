@@ -228,7 +228,7 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
         self._lock.release()
         
         if self._main_thread is None: # if main thread is not running then start 
-            self._main_thread = threading.Thread(target=self._main_loop)
+            self._main_thread = threading.Thread(name="main_loop", target=self._main_loop)
             self._main_thread.start() 
         
         return new_seis
