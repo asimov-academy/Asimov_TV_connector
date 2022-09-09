@@ -70,6 +70,16 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
 
             return interval_dt_list[0]
 
+        def get_seis(self, symbol, exchange, interval):
+            # Returns Seis object listed in SAT based on
+            # symbol, exchange and interval. If not listed then 
+            # None is returned
+            for seis in self:
+                if seis.symbol==symbol and seis.exchange==exchange and seis.interval==interval:
+                    return seis
+            
+            return None
+            
         def wait(self):
             # Wait until next interval(s) expire
             # returns true after waiting, even if interrupted. Returns False only
@@ -210,21 +220,22 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
         Returns
         ----------
         Seis
-            created based on the provided symbol, exchange 
-            and interval values. If timeout was specified and
-            expired then False will be returned.
+            If such Seis already existed then that will
+            be rteurned, otherwise new will be created.
+            If timeout was specified and expired then 
+            False will be returned.
         
         Raises
         ----------
-        ValueError
-            If Seis with such symbol-exchange-interval 
-            combination already exists.
         ValueError
             If provided symbol and exchange combination is
             not listed on TradingView
         '''
         if self._args_invalid(symbol, exchange):
             raise ValueError("Provided symbol and exchange combination is not listed in TradingView")
+        
+        if seis := self._sat.get_seis(symbol, exchange, interval): # if Seis with such parameters already exists then simply return that
+            return seis
         
         new_seis=tvDatafeed.Seis(symbol, exchange, interval)
         
@@ -235,7 +246,7 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
         
         # if this seis is already in list 
         if new_seis in self._sat:
-            raise ValueError("Duplicates not allowed") # TODO: make it so instead of exception the existing Seis object is returned
+            return self._sat.get_seis(symbol, exchange, interval)
         
         # add to interval group - if interval group does not exists then create one
         interval_key=new_seis.interval.value
@@ -394,7 +405,7 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
                             
                             time.sleep(0.1) # little time before retrying
                         else: # limit reached, throw an exception (RETRY_LIMIT-1)
-                            raise ValueError("Failed to retrieve new data from TradingView") # TODO: use correct exception; maybe use logging instead of exceptions?
+                            raise ValueError("Failed to retrieve new data from TradingView") # TODO: use correct exception; maybe use logging instead of exceptions? also, wen exception then close consumer threads
                         
                         # push new data into all consumers that are expecting data for this Seis
                         for consumer in seis.get_consumers():
