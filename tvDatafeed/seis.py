@@ -39,7 +39,7 @@ class Seis(object):
         
         self._tvdatafeed=None 
         self._consumers=[]
-        self.updated=None # datetime of the data bar that was last retrieved from TradingView
+        self._updated=None # datetime of the data bar that was last retrieved from TradingView
     
     def __eq__(self, other):
         # Compare two seis instances to decide if they are equal
@@ -170,7 +170,27 @@ class Seis(object):
         if consumer not in self._consumers:
             raise NameError("Consumer does not exist in the list")
         self._consumers.remove(consumer)
+    
+    def is_new_data(self, data):
+        ''''
+        Check if datas datetime is newer than previous datas datetime
         
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            contains retrieved data and datetime
+        
+        Returns
+        -------
+        boolean
+            True is new, False otherwise
+        '''
+        if self._updated != data.index.to_pydatetime()[0]: 
+            self._updated=data.index.to_pydatetime()[0] # update the datetime of the last sample
+            return True
+        
+        return False
+   
     def get_hist(self, n_bars): # TODO: implement this method
         '''
         Get historic data for this Seis

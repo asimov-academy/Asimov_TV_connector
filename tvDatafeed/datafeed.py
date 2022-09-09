@@ -69,7 +69,7 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
             interval_dt_list.sort()
 
             return interval_dt_list[0]
-        
+
         def wait(self):
             # Wait until next interval(s) expire
             # returns true after waiting, even if interrupted. Returns False only
@@ -219,7 +219,7 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
         if interval_key not in self._sat.intervals():
             # get last bar update datetime value for the Seis
             ticker_data=super().get_hist(new_seis.symbol, new_seis.exchange, new_seis.interval, n_bars=2) # get ticker data bar for this symbol from TradingView
-            update_dt=ticker_data.index.to_pydatetime()[1] # extract datetime of when this bar was produced/released
+            update_dt=ticker_data.index.to_pydatetime()[0] # extract datetime of when this bar was produced/released
             # append this seis into SAT
             self._sat.append(new_seis, update_dt)
         else:
@@ -364,11 +364,9 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
                     for seis in self._sat[interval]: # go through all the seises in this interval group 
                         for _ in range(0, RETRY_LIMIT): # re-try maximum of RETRY_LIMIT times
                             data=super().get_hist(seis.symbol, seis.exchange, interval=seis.interval, n_bars=2) # get_hist returns bars starting with currently open so need to read 2 to get first closed
-                            if data is not None:
-                                # retrieved data datetime not equal the old datetime means new sample
-                                if seis.updated != data.index.to_pydatetime()[0]: # TODO: create a method in Seis class called is_new_data(data) in which we do datetime checking
-                                    seis.updated=data.index.to_pydatetime()[0] # update the datetime of the last sample
-                                    data=data.drop(labels=data.index[1]) # drop the row which has un-closed bar data
+                            if data is not None: # check that we did get any data
+                                if seis.is_new_data(data): # check that it is new data not old 
+                                    data=data.drop(labels=data.index[1]) # drop the row (last) which has yet un-closed bar data 
                                     break
                             
                             time.sleep(0.1) # little time before retrying
