@@ -206,13 +206,15 @@ consumer3.del_consumer()
 
 ### Getting Data
 
-TvDatafeedLive supports retrieving historic data in adjecent to retrieving live data. The user can use the `tvl.get_hist` method which has the same 
-API as the TvDatafeed `get_hist` method, except it accepts one additional optional argument - timeout. This parameter defaults to -1 which means no
-timeout.
+TvDatafeedLive supports retrieving historic data in addition to retrieving live data. The user can use the `tvl.get_hist` or `seis.get_hist` method. 
+The former method has the same API as the TvDatafeed `get_hist` method, except it accepts one additional optional argument - `timeout`. This parameter 
+defaults to -1 which means no timeout. The `seis.get_hist` method only accepts two arguments - `n_bars` and `timeout`. Both of these parameters are
+optional and default to 10 bars and no timeout.
 
 ```python
 
 data=tvl.get_hist(symbol, exchange, interval=tvDatafeed.Interval.in_daily, n_bars=10, fut_contract=None, extended_session=False, timeout=-1)
+data=seis.get_hist(n_bars=10, timeout=-1)
 
 ```
 
