@@ -168,6 +168,22 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
         self._main_thread = None  
         self._sat = self._SeisesAndTrigger() 
     
+    def _args_invalid(self, symbol, exchange):
+        # check if provided arguemnts are valid and that such
+        # symbol, exchange and interval set exists in TradingView
+        # 
+        # returns True if does not exist, False otherwise
+        result_list=self.search_symbol(symbol, exchange)
+        
+        if not result_list: # if does not exists then empty
+            return True
+        
+        for item in result_list:
+            if item['symbol']==symbol and item['exchange']==exchange:
+                return False
+        
+        return True
+    
     def new_seis(self, symbol, exchange, interval, timeout=-1): 
         '''
         Create and add new Seis to live feed
@@ -203,16 +219,23 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
         ValueError
             If Seis with such symbol-exchange-interval 
             combination already exists.
+        ValueError
+            If provided symbol and exchange combination is
+            not listed on TradingView
         '''
+        if self._args_invalid(symbol, exchange):
+            raise ValueError("Provided symbol and exchange combination is not listed in TradingView")
+        
         new_seis=tvDatafeed.Seis(symbol, exchange, interval)
         
         if self._lock.acquire(timeout=timeout) is False:
             return False
+        
         new_seis.tvdatafeed=self
         
         # if this seis is already in list 
         if new_seis in self._sat:
-            raise self.ValueError("Duplicates not allowed") # TODO make it so instead of exception the existing Seis object is returned
+            raise ValueError("Duplicates not allowed") # TODO: make it so instead of exception the existing Seis object is returned
         
         # add to interval group - if interval group does not exists then create one
         interval_key=new_seis.interval.value
@@ -388,7 +411,6 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
                 
             self._main_thread = None
     
-    # TODO: make it possible for the user to provide arguments in either Seis or original format
     def get_hist(self,  
         symbol: str,
         exchange: str = "NSE",
