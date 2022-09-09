@@ -191,7 +191,7 @@ class Seis(object):
         
         return False
    
-    def get_hist(self, n_bars): # TODO: implement this method
+    def get_hist(self, n_bars=10, timeout=-1):
         '''
         Get historic data for this Seis
         
@@ -199,10 +199,27 @@ class Seis(object):
         
         Parameters
         ----------
-        n_bars : int
-            number of historic bars to retrieve
+        n_bars : int, optional
+            number of historic bars to retrieve, defaults to 10
+        timeout : int, optional
+            maximum time to wait in seconds for return, default
+            is -1 (blocking)
+        
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame containing data bars or if timeout was specified
+            and timed out then False will be returned
+            
+        Raises
+        ------
+        NameError
+            if no TvDatafeedLive reference is added for this Seis
         '''
-        raise NotImplementedError 
+        if self._tvdatafeed is None:
+            raise NameError("TvDatafeed not provided")
+        
+        return self._tvdatafeed.get_hist(symbol=self._symbol, exchange=self._exchange, interval=self._interval, n_bars=n_bars, timeout=timeout) 
     
     def del_seis(self, timeout=-1):
         '''
