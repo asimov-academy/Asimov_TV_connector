@@ -1,4 +1,4 @@
-import threading, queue
+import threading, queue, traceback
 
 class Consumer(threading.Thread):
     '''
@@ -35,6 +35,7 @@ class Consumer(threading.Thread):
         self._buffer=queue.Queue()               
         self.seis=seis
         self.callback=callback
+        self.name=self.callback.__name__+"_"+self.seis.symbol+"_"+seis.exchange+"_"+seis.interval.value
     
     def __repr__(self):
         return f'Consumer({repr(self.seis)},{self.callback.__name__})'
@@ -48,8 +49,15 @@ class Consumer(threading.Thread):
             data=self._buffer.get()
             if data is None:
                 break
-            
-            self.callback(self.seis, data)
+
+            try: # in case user provided function throws an exception
+                self.callback(self.seis, data)
+            except Exception as e: # remove the consumer from Seis and close down gracefully
+                self.del_consumer()
+                self.seis=None # delete references
+                self.callback=None
+                self._buffer=None
+                raise e from None
         
         self.seis=None # delete references
         self.callback=None
