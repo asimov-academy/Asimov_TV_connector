@@ -394,7 +394,8 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
         # consumer threads that are added for that particular Seis.
         #
         # If fail to retrieve data then retry up to RETRY_LIMIT times 
-        # and if still fail then raise ValueError.
+        # and if still fail then log the event (critical) and close
+        # down the consumer threads and the main loop itself.
         
         while self._sat.wait(): # waits until soonest expiry and returns True; returns False if closed                     
             with self._lock:
@@ -410,7 +411,7 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
                             time.sleep(0.1) # little time before retrying
                         else: # limit reached, print an error into logs and gracefully shut down the main loop and consumer threads
                             self._sat.quit()
-                            logger.exception("Failed to retrieve new data from TradingView", exc_info=True)
+                            logger.critical("Failed to retrieve new data from TradingView")
                         
                         # push new data into all consumers that are expecting data for this Seis
                         for consumer in seis.get_consumers():
