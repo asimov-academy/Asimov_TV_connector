@@ -1,7 +1,9 @@
-import threading, queue, time
+import threading, queue, time, logging
 import tvDatafeed 
 from datetime import datetime as dt
 from dateutil.relativedelta import relativedelta as rd
+
+logger = logging.getLogger(__name__)
 
 RETRY_LIMIT=50 # max number of retries to get valid data from tvDatafeed; TODO: think about creating a conf file for such parameters
 
@@ -84,8 +86,10 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
             # Wait until next interval(s) expire
             # returns true after waiting, even if interrupted. Returns False only
             # when interrupted for shutdown
+            if not self._trigger_quit: # if not quitting then we can clear interrupt before sarting the wait
+                self._trigger_interrupt.clear() # in case it was set by adding/removing new Seis
+            
             self._trigger_dt=self._next_trigger_dt() # get new expiry datetime
-            self._trigger_interrupt.clear() # in case it was set by refresh when not waiting
             
             while True: # might need to restart waiting if trigger_dt changes and interrupted when waiting
                 wait_time=self._trigger_dt-dt.now() # calculate the time to next expiry
@@ -404,8 +408,9 @@ class TvDatafeedLive(tvDatafeed.TvDatafeed):
                                     break
                             
                             time.sleep(0.1) # little time before retrying
-                        else: # limit reached, throw an exception (RETRY_LIMIT-1)
-                            raise ValueError("Failed to retrieve new data from TradingView") # TODO: use correct exception; maybe use logging instead of exceptions? also, wen exception then close consumer threads
+                        else: # limit reached, print an error into logs and gracefully shut down the main loop and consumer threads
+                            self._sat.quit()
+                            logger.exception("Failed to retrieve new data from TradingView", exc_info=True)
                         
                         # push new data into all consumers that are expecting data for this Seis
                         for consumer in seis.get_consumers():
