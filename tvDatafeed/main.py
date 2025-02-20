@@ -31,9 +31,10 @@ class Interval(enum.Enum):
 
 class TvDatafeed:
     __sign_in_url = 'https://www.tradingview.com/accounts/signin/'
-    __search_url = 'https://symbol-search.tradingview.com/symbol_search/?text={}&hl=1&exchange={}&lang=en&type=&domain=production'
+    __search_url = 'https://symbol-search.tradingview.com/symbol_search/v3/?text={}&hl=1&exchange={}&lang=en&search_type=&domain=production'
     __ws_headers = json.dumps({"Origin": "https://data.tradingview.com"})
     __signin_headers = {'Referer': 'https://www.tradingview.com'}
+    __search_headers = {'Referer': 'https://www.tradingview.com', 'Origin': 'https://data.tradingview.com'}
     __ws_timeout = 5
 
     def __init__(
@@ -294,11 +295,13 @@ class TvDatafeed:
 
         symbols_list = []
         try:
-            resp = requests.get(url)
+            # Need Referer _and_ Origin headers, otherwise their Nginx frontend returns 403 :-(
+            resp = requests.get(url, headers=self.__search_headers, timeout=60)
+            resp.raise_for_status()
 
-            symbols_list = json.loads(resp.text.replace(
-                '</em>', '').replace('<em>', ''))
-        except Exception as e:
+            # As of v3, this returns a dict: {'symbols_remaining':<int>, 'symbols': [...]}
+            symbols_list = json.loads(resp.text).get('symbols', [])
+        except Exception as e:      # pylint: disable=broad-exception-caught
             logger.error(e)
 
         return symbols_list
